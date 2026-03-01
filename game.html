@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chihuahua po Oscypki – Podhale Run (1 runda)</title>
+  <title>Chihuahua po Oscypki – Podhale Run</title>
   <style>
     :root { color-scheme: light; }
     html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
@@ -17,42 +17,102 @@
     button { border: 0; border-radius: 12px; padding: 10px 14px; background: #111827; color: white; font-weight: 650; cursor: pointer; }
     button.secondary { background:#e5e7eb; color:#111827; }
     .pill { font-size: 13px; padding: 6px 10px; border-radius: 999px; background:#ffffffcc; border: 1px solid #ffffff; backdrop-filter: blur(6px); }
-    /* TOUCH CONTROLS */
-.touch {
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
-  display: none;
-  padding: 14px;
-  gap: 12px;
-  justify-content: space-between;
-  align-items: flex-end;
-  z-index: 50;
-  pointer-events: none;
-}
-.touch .group { display: flex; gap: 12px; pointer-events: auto; }
-.touch button {
-  width: 74px; height: 74px;
-  border-radius: 18px;
-  font-size: 16px;
-  font-weight: 700;
-  opacity: 0.92;
-}
-.touch button.big { width: 92px; height: 92px; }
 
-@media (max-width: 820px), (pointer: coarse) {
-  .touch { display: flex; }
-  body { padding-bottom: 120px; }
-}
+    /* TOUCH CONTROLS */
+    .touch {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      display: none;
+      padding: 14px;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: flex-end;
+      z-index: 50;
+      pointer-events: none;
+    }
+    .touch .group { display: flex; gap: 12px; pointer-events: auto; }
+    .touch button {
+      width: 74px; height: 74px;
+      border-radius: 18px;
+      font-size: 16px;
+      font-weight: 700;
+      opacity: 0.92;
+      touch-action: none;
+    }
+    .touch button.big { width: 92px; height: 92px; }
+    @media (max-width: 820px), (pointer: coarse) {
+      .touch { display: flex; }
+      body { padding-bottom: 120px; }
+    }
+
+    /* START SCREEN (PLAKAT) */
+    #splash {
+      position: fixed;
+      inset: 0;
+      background: #0b1220;
+      display: grid;
+      place-items: center;
+      z-index: 9999;
+      cursor: pointer;
+    }
+    #splash .frame{
+      width: min(980px, 96vw);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+      position: relative;
+    }
+    #splash img{
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    #splash .cta{
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(17,24,39,.80);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(6px);
+    }
+    #splash .hint2{
+      position: absolute;
+      left: 50%;
+      top: 14px;
+      transform: translateX(-50%);
+      font-size: 13px;
+      opacity: .9;
+      background: rgba(255,255,255,.10);
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+    }
   </style>
 </head>
+
 <body>
+  <!-- PLAKAT (klik = start gry) -->
+  <div id="splash" aria-label="Ekran startowy">
+    <div class="frame">
+      <!-- Upewnij się, że plik w repo nazywa się DOKŁADNIE: plakat.png -->
+      <img src="./plakat.png" alt="Plakat Techichi" />
+      <div class="hint2">Kliknij, aby rozpocząć</div>
+      <div class="cta">🎮 Start</div>
+    </div>
+  </div>
+
   <div class="wrap">
     <div class="topbar">
       <div>
         <div class="title">Chihuahua po Oscypki – Podhale Run</div>
         <div class="hint">Sterowanie: ← → (ruch), Spacja (skok). Zbieraj oscypki jak monety. Uważaj na koty i wodę.</div>
       </div>
-      <div class="pill" id="statusPill">Gotowy</div>
+      <div class="pill" id="statusPill">Kliknij plakat, aby zacząć</div>
     </div>
 
     <canvas id="game" width="960" height="540" aria-label="Gra Chihuahua po Oscypki"></canvas>
@@ -63,18 +123,25 @@
       <button class="secondary" id="musicBtn">Muzyka: ON</button>
     </div>
   </div>
-<div class="touch">
-  <div class="group">
-    <button id="btnLeft"  class="secondary">◀</button>
-    <button id="btnRight" class="secondary">▶</button>
+
+  <!-- Przyciski dotykowe (mobile) -->
+  <div class="touch">
+    <div class="group">
+      <button id="btnLeft"  class="secondary">◀</button>
+      <button id="btnRight" class="secondary">▶</button>
+    </div>
+    <div class="group">
+      <button id="btnJump">SKOK</button>
+    </div>
   </div>
-  <div class="group">
-    <button id="btnJump">SKOK</button>
-  </div>
-</div>
+
 <script>
 (() => {
   "use strict";
+
+  // Bezpiecznik: gdyby skrypt przypadkiem odpalił się 2x
+  if (window.__TECHICHI_RUNNING__) return;
+  window.__TECHICHI_RUNNING__ = true;
 
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
@@ -82,6 +149,7 @@
   const restartBtn = document.getElementById("restartBtn");
   const toggleBtn  = document.getElementById("toggleBtn");
   const musicBtn   = document.getElementById("musicBtn");
+  const splash     = document.getElementById("splash");
 
   const W = canvas.width, H = canvas.height;
 
@@ -195,33 +263,66 @@
   musicBtn.addEventListener("click", toggleMusic);
   setMusicButton();
 
-  // ========= Input =========
-  // TOUCH MOBILE
-const btnLeft  = document.getElementById("btnLeft");
-const btnRight = document.getElementById("btnRight");
-const btnJump  = document.getElementById("btnJump");
+  // ========= State =========
+  let paused = true;     // start od pauzy (plakat)
+  let gameOver = false;
 
-function bindHold(btn, code) {
-  if (!btn) return;
-  const down = (e) => { e.preventDefault(); keys.add(code); };
-  const up   = (e) => { e.preventDefault(); keys.delete(code); };
-  btn.addEventListener("pointerdown", down);
-  btn.addEventListener("pointerup", up);
-  btn.addEventListener("pointercancel", up);
-  btn.addEventListener("pointerleave", up);
-}
+  function setStatus(text) { statusPill.textContent = text; }
 
-bindHold(btnLeft, "ArrowLeft");
-bindHold(btnRight, "ArrowRight");
-bindHold(btnJump, "Space");
+  // ========= Input + Start from Splash =========
   const keys = new Set();
+  let started = false;
+
+  function startFromSplash() {
+    if (started) return;
+    started = true;
+
+    if (splash) splash.style.display = "none";
+    paused = false;
+    toggleBtn.textContent = "Pauza";
+    setStatus("Gramy");
+    unlockAudioOnce();
+  }
+
+  if (splash) splash.addEventListener("pointerdown", startFromSplash);
+
+  // Touch buttons (mobile)
+  const btnLeft  = document.getElementById("btnLeft");
+  const btnRight = document.getElementById("btnRight");
+  const btnJump  = document.getElementById("btnJump");
+
+  function bindHold(btn, code) {
+    if (!btn) return;
+    const down = (e) => { e.preventDefault(); startFromSplash(); keys.add(code); };
+    const up   = (e) => { e.preventDefault(); keys.delete(code); };
+    btn.addEventListener("pointerdown", down);
+    btn.addEventListener("pointerup", up);
+    btn.addEventListener("pointercancel", up);
+    btn.addEventListener("pointerleave", up);
+  }
+  bindHold(btnLeft, "ArrowLeft");
+  bindHold(btnRight, "ArrowRight");
+  bindHold(btnJump, "Space");
+
   window.addEventListener("keydown", (e) => {
-    if (["ArrowLeft","ArrowRight","Space","KeyP","ArrowUp","KeyR"].includes(e.code)) e.preventDefault();
+    if (["ArrowLeft","ArrowRight","Space","KeyP","ArrowUp","KeyR","Enter"].includes(e.code)) e.preventDefault();
+    if (!started && (e.code === "Enter" || e.code === "Space")) startFromSplash();
+
     keys.add(e.code);
     if (e.code === "KeyP") togglePause();
     if (e.code === "KeyR") reset();
   }, { passive: false });
+
   window.addEventListener("keyup", (e) => keys.delete(e.code));
+
+  function togglePause() {
+    if (gameOver) return;
+    paused = !paused;
+    toggleBtn.textContent = paused ? "Wznów" : "Pauza";
+    setStatus(paused ? "Pauza" : "Gramy");
+  }
+
+  toggleBtn.addEventListener("click", togglePause);
 
   // ========= World =========
   const WATER_Y = 495;
@@ -258,13 +359,13 @@ bindHold(btnJump, "Space");
     w: 46, h: 34,
     vx: 0, vy: 0,
     onGround: false,
-    face: 1,         // 1 prawo, -1 lewo
+    face: 1,
     alive: true,
     won: false,
     lives: 2,
     invuln: 0,
-    score: 0,        // zebrane oscypki
-    lastFace: 1      // kierunek, gdy stoi
+    score: 0,
+    lastFace: 1
   };
 
   // FX
@@ -289,6 +390,10 @@ bindHold(btnJump, "Space");
   }
 
   // ========= Enemies =========
+  function makeCat(x, y, leftBound, rightBound, dir) {
+    return { x, y, w: 40, h: 28, vx: 1.35 * dir, vy: 0, alive: true, lb: leftBound, rb: rightBound };
+  }
+
   const catsStart = [
     makeCat(600,  0, 520, 760, 1),
     makeCat(1260, 0, 1180, 1440, -1),
@@ -297,11 +402,7 @@ bindHold(btnJump, "Space");
   ];
   let cats = [];
 
-  function makeCat(x, y, leftBound, rightBound, dir) {
-    return { x, y, w: 40, h: 28, vx: 1.35 * dir, vy: 0, alive: true, lb: leftBound, rb: rightBound };
-  }
-
-  // ========= Collectibles (oscypki jak monety) =========
+  // ========= Collectibles =========
   const collectiblesStart = [
     { x: 140, y: 395, r: 10, taken: false },
     { x: 200, y: 395, r: 10, taken: false },
@@ -366,12 +467,7 @@ bindHold(btnJump, "Space");
     if (smoke.length > 80) smoke.shift();
   }
 
-  // ========= State =========
-  let paused = false;
-  let gameOver = false;
-
-  function setStatus(text) { statusPill.textContent = text; }
-
+  // ========= Reset =========
   function reset() {
     player.x = playerStart.x; player.y = playerStart.y;
     player.vx = 0; player.vy = 0;
@@ -388,21 +484,17 @@ bindHold(btnJump, "Space");
     smoke = [];
     splashes = [];
     gameOver = false;
-    paused = false;
+
+    // wracamy do plakatu
+    paused = true;
+    started = false;
+    if (splash) splash.style.display = "grid";
     toggleBtn.textContent = "Pauza";
     heartFx.active = false;
-    setStatus("Gotowy");
+    setStatus("Kliknij plakat, aby zacząć");
   }
 
   restartBtn.addEventListener("click", reset);
-  toggleBtn.addEventListener("click", togglePause);
-
-  function togglePause() {
-    if (gameOver) return;
-    paused = !paused;
-    toggleBtn.textContent = paused ? "Wznów" : "Pauza";
-    setStatus(paused ? "Pauza" : "Gramy");
-  }
 
   // ========= Collision =========
   function resolvePlatforms(entity) {
@@ -445,7 +537,6 @@ bindHold(btnJump, "Space");
     player.vx = clamp(player.vx, -MAX_SPEED, MAX_SPEED);
     if (!left && !right) player.vx *= FRICTION;
 
-    // KIERUNEK PATRZENIA: z prędkości (jak biegnie) + zapamiętanie na postój
     if (Math.abs(player.vx) > 0.25) {
       player.face = (player.vx > 0) ? 1 : -1;
       player.lastFace = player.face;
@@ -464,7 +555,6 @@ bindHold(btnJump, "Space");
     player.vy = clamp(player.vy, -999, 14);
 
     resolvePlatforms(player);
-
     collectCheck();
 
     if (player.y + player.h > WATER_Y) {
@@ -675,7 +765,6 @@ bindHold(btnJump, "Space");
     }
   }
 
-  // Chihuahua
   function drawChihuahua(px, py, face) {
     const x = px - camera.x;
     const y = py - camera.y;
@@ -966,7 +1055,6 @@ bindHold(btnJump, "Space");
     if ((player.invuln > 0) && (Math.floor(player.invuln/6) % 2 === 0)) {
       // blink
     } else {
-      // ✅ ZMIANA: pies patrzy w przeciwną stronę
       if (player.alive || player.won) drawChihuahua(player.x, player.y, -player.face);
     }
 
@@ -994,6 +1082,7 @@ bindHold(btnJump, "Space");
     requestAnimationFrame(loop);
   }
 
+  // start
   reset();
   loop();
 
@@ -1001,4 +1090,3 @@ bindHold(btnJump, "Space");
 </script>
 </body>
 </html>
-
