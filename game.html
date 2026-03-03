@@ -1,110 +1,118 @@
-<!doctype html> 
+<!doctype html>
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>Techichi - Strażnik Gór</title>
- <style>
-  :root { color-scheme: light; }
-  html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-  body { display: grid; place-items: center; background: #f6f7fb; }
-  .wrap { width: min(980px, 96vw); }
-  .topbar { display:flex; align-items:center; justify-content:space-between; gap: 12px; margin: 10px 0 8px; }
-  .title { font-weight: 700; }
-  .hint { font-size: 14px; opacity: .8; line-height: 1.25; }
-  canvas { width: 100%; height: auto; border-radius: 16px; box-shadow: 0 10px 28px rgba(0,0,0,.08); background: #cfefff; touch-action: none; }
-  .controls { display:flex; gap: 10px; flex-wrap: wrap; margin: 10px 0 14px; }
-  button { border: 0; border-radius: 12px; padding: 10px 14px; background: #111827; color: white; font-weight: 650; cursor: pointer; }
-  button.secondary { background:#e5e7eb; color:#111827; }
-  .pill { font-size: 13px; padding: 6px 10px; border-radius: 999px; background:#ffffffcc; border: 1px solid #ffffff; backdrop-filter: blur(6px); }
+  <style>
+    :root { color-scheme: light; }
+    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { display: grid; place-items: center; background: #f6f7fb; }
+    .wrap { width: min(980px, 96vw); }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap: 12px; margin: 10px 0 8px; }
+    .title { font-weight: 700; }
+    .hint { font-size: 14px; opacity: .8; line-height: 1.25; }
+    canvas { width: 100%; height: auto; border-radius: 16px; box-shadow: 0 10px 28px rgba(0,0,0,.08); background: #cfefff; touch-action: none; }
+    .controls { display:flex; gap: 10px; flex-wrap: wrap; margin: 10px 0 14px; }
+    button { border: 0; border-radius: 12px; padding: 10px 14px; background: #111827; color: white; font-weight: 650; cursor: pointer; }
+    button.secondary { background:#e5e7eb; color:#111827; }
+    .pill { font-size: 13px; padding: 6px 10px; border-radius: 999px; background:#ffffffcc; border: 1px solid #ffffff; backdrop-filter: blur(6px); }
 
-  /* TOUCH CONTROLS */
-  .touch {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    display: none;
-    padding: 14px;
-    gap: 12px;
-    justify-content: space-between;
-    align-items: flex-end;
-    z-index: 50;
-    pointer-events: none;
-  }
-  .touch .group { display: flex; gap: 12px; pointer-events: auto; }
-  .touch button {
-    width: 74px; height: 74px;
-    border-radius: 18px;
-    font-size: 16px;
-    font-weight: 700;
-    opacity: 0.92;
-    touch-action: none;
-  }
-  @media (max-width: 820px), (pointer: coarse) {
-    .touch { display: flex; }
-    body { padding-bottom: 120px; }
-  }
+    /* TOUCH CONTROLS */
+    .touch {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      display: none;
+      padding: 14px;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: flex-end;
+      z-index: 50;
+      pointer-events: none;
+    }
+    .touch .group { display: flex; gap: 12px; pointer-events: auto; }
+    .touch button {
+      width: 74px; height: 74px;
+      border-radius: 18px;
+      font-size: 16px;
+      font-weight: 700;
+      opacity: 0.92;
+      touch-action: none;
+    }
+    @media (max-width: 820px), (pointer: coarse) {
+      .touch { display: flex; }
+      body { padding-bottom: 120px; }
+    }
 
-  /* START SCREEN (PLAKAT) */
-  #splash {
-    position: fixed;
-    inset: 0;
-    background: #0b1220;
-    display: grid;
-    place-items: center;
-    z-index: 9999;
-    cursor: pointer;
-  }
-  #splash .frame{
-    width: min(980px, 96vw);
-    border-radius: 18px;
-    overflow: hidden;
-    box-shadow: 0 18px 60px rgba(0,0,0,.45);
-    position: relative;
-  }
-  #splash img{
-    display: block;
-    width: 60%;
-    max-width: 500px;
-    height: auto;
-    margin: 0 auto;
-  }
-  #splash .cta{
-    position: absolute;
-    left: 50%;
-    bottom: 18px;
-    transform: translateX(-50%);
-    background: rgba(17,24,39,.80);
-    color: #fff;
-    padding: 10px 14px;
-    border-radius: 12px;
-    font-weight: 700;
-    border: 1px solid rgba(255,255,255,.18);
-    backdrop-filter: blur(6px);
-  }
-  #splash .hint2{
-    position: absolute;
-    left: 50%;
-    top: 14px;
-    transform: translateX(-50%);
-    font-size: 13px;
-    opacity: .9;
-    color: #fff;
-    background: rgba(255,255,255,0.10);
-    padding: 6px 10px;
-    border-radius: 999px;
-    border: 1px solid rgba(255,255,255,0.14);
-  }
-  /* Wymuszenie poziomu na telefonie */
-</style>
+    /* START SCREEN (PLAKAT) */
+    #splash {
+      position: fixed;
+      inset: 0;
+      background: #0b1220;
+      display: grid;
+      place-items: center;
+      z-index: 9999;
+      cursor: pointer;
+    }
+    #splash .frame{
+      width: min(980px, 96vw);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+      position: relative;
+    }
+    #splash img{
+      display: block;
+      width: 60%;
+      max-width: 500px;
+      height: auto;
+      margin: 0 auto;
+    }
+    #splash .cta{
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(17,24,39,.80);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(6px);
+    }
+    #splash .hint2{
+      position: absolute;
+      left: 50%;
+      top: 14px;
+      transform: translateX(-50%);
+      font-size: 13px;
+      opacity: .9;
+      color: #fff;
+      background: rgba(255,255,255,0.10);
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+  </style>
 </head>
+
 <body>
-  <div id="splash" aria-label="Ekran startowy">
-  <div class="frame">
-    <img src="./plakat.png" alt="Plakat Techichi" />
-    <div class="hint2">Kliknij, aby rozpocząć</div>
-    <div class="cta">🎮 Start</div>
-  </div>
+<div id="rotateOverlay" style="
+  position:fixed; inset:0; z-index:10000;
+  display:none; align-items:center; justify-content:center;
+  background:#0b1220; color:#fff; font-size:22px;
+  text-align:center; padding:40px;">
+  Obróć telefon poziomo
 </div>
+
+  <div id="splash" aria-label="Ekran startowy">
+    <div class="frame">
+      <img src="./plakat.png" alt="Plakat Techichi" />
+      <div class="hint2">Kliknij, aby rozpocząć</div>
+      <div class="cta">🎮 Start</div>
+    </div>
+  </div>
 
   <div class="wrap">
     <div class="topbar">
@@ -264,27 +272,19 @@
   // ========= State =========
   let paused = true;
   let gameOver = false;
-
   function setStatus(text) { statusPill.textContent = text; }
 
-  // ========= TIME (30s per round) =========
-  const ROUND_TIME = 30;
-  let timeLeft = ROUND_TIME;
-// ========= REQUIREMENTS (oscypki to advance) =========
-const REQUIRED_OSCYPKI = {
-  1: 5,
-  2: 8,
-  3: 10
-};
+  // ========= TIME =========
+  const ROUND_TIME_DEFAULT = 30;
+  const ROUND_TIME_L4 = 45;
+  let roundTime = ROUND_TIME_DEFAULT;
+  let timeLeft = roundTime;
 
-function requiredForLevel(lvl) {
-  return REQUIRED_OSCYPKI[lvl] ?? 0;
-}
+  // ========= REQUIREMENTS (oscypki in THIS round) =========
+  const REQUIRED_OSCYPKI = { 1: 5, 2: 8, 3: 10, 4: 10 };
+  function requiredForLevel(lvl) { return REQUIRED_OSCYPKI[lvl] ?? 0; }
 
-  function resetRoundTimer() {
-    timeLeft = ROUND_TIME;
-  }
-
+  function resetRoundTimer() { timeLeft = roundTime; }
   function formatTimeLeft() {
     const s = Math.max(0, Math.ceil(timeLeft));
     return String(s).padStart(2, "0") + "s";
@@ -368,7 +368,7 @@ function requiredForLevel(lvl) {
   // ========= World =========
   const WATER_Y = 495;
 
-  const platforms = [
+  const basePlatforms = [
     { x: 0,   y: 420, w: 360, h: 22 },
     { x: 220, y: 360, w: 220, h: 22 },
     { x: 520, y: 300, w: 240, h: 22 },
@@ -379,6 +379,42 @@ function requiredForLevel(lvl) {
     { x: 2220,y: 340, w: 220, h: 22 },
     { x: 2520,y: 390, w: 160, h: 22 },
   ];
+
+  let platforms = basePlatforms.map(p => ({ ...p }));
+  let platformT = 0;
+
+  let level = 1;
+  let bullets = [];
+  let cats = [];
+  let collectibles = [];
+  let l2Added = false, l3Added = false, l4Added = false;
+
+  function updatePlatforms(dt) {
+    const prev = platforms;
+    platforms = basePlatforms.map(p => ({ ...p }));
+
+    if (level !== 4) return;
+
+    platformT += dt;
+
+    const movingIdx = [1, 3, 5, 7];
+    for (const i of movingIdx) {
+      const p = platforms[i];
+      const base = basePlatforms[i];
+      const amp = 70;
+      const spd = 1.2;
+      const phase = i * 0.9;
+      p.x = base.x + Math.sin(platformT * spd + phase) * amp;
+    }
+
+    for (const c of cats) {
+      if (!c.alive) continue;
+      const idx = c.platformIndex;
+      const oldP = prev[idx];
+      const newP = platforms[idx];
+      if (oldP && newP) c.x += (newP.x - oldP.x);
+    }
+  }
 
   const hut = {
     x: 2605, y: 280, w: 170, h: 170,
@@ -393,10 +429,6 @@ function requiredForLevel(lvl) {
 
   const camera = { x: 0, y: 0 };
 
-  // ========= Level + bullets =========
-  let level = 1;
-  let bullets = [];
-
   // ========= Player =========
   const playerStart = { x: 60, y: 320 };
   const player = {
@@ -409,12 +441,17 @@ function requiredForLevel(lvl) {
     won: false,
     lives: 2,
     invuln: 0,
-    score: 0,
+
+    // ważne: wynik rundy (CEL) resetuje się w startLevel
+    roundScore: 0,
+
     lastFace: 1
   };
 
+  // ========= Effects =========
   const heartFx = { active: false, x: 0, y: 0, t: 0 };
   let splashes = [];
+  let smoke = [];
 
   function spawnSplash(worldX, worldY) {
     for (let i=0; i<16; i++) {
@@ -431,6 +468,21 @@ function requiredForLevel(lvl) {
     ensureAudio();
     if (audioCtx.state === "suspended") audioCtx.resume();
     noiseSplash(0.18);
+  }
+
+  function spawnSmoke() {
+    const chimneyX = hut.x + 130;
+    const chimneyY = hut.y + 20;
+    smoke.push({
+      x: chimneyX + (Math.random()*6 - 3),
+      y: chimneyY,
+      r: 6 + Math.random()*6,
+      a: 0.55 + Math.random()*0.2,
+      vx: 0.2 + Math.random()*0.3,
+      vy: -0.6 - Math.random()*0.6,
+      life: 120 + Math.floor(Math.random()*40)
+    });
+    if (smoke.length > 80) smoke.shift();
   }
 
   // ========= Enemies =========
@@ -498,20 +550,22 @@ function requiredForLevel(lvl) {
     makeCatOnPlatform(7, 2300,  1),
   ];
 
-  const catsL3Start = platforms.map((p, idx) => {
+  const catsL3Start = basePlatforms.map((p, idx) => {
     const dir = (idx % 2 === 0) ? 1 : -1;
     const x = p.x + p.w * 0.5;
     return makeCatOnPlatform(idx, x, dir);
   });
 
-  let cats = [];
-
-  // ========= Oscypki =========
+  // ========= Oscypki (dynamic: trzymają się platform) =========
   function onTopOf(pIndex, xOffset, r=10) {
-    const p = platforms[pIndex];
-    const x = clamp(p.x + xOffset, p.x + 14, p.x + p.w - 14);
-    const y = p.y - (r + 2);
-    return { x, y, r, taken: false };
+    return { platformIndex: pIndex, xOffset, r, taken: false };
+  }
+
+  function getCollectPos(o) {
+    const p = platforms[o.platformIndex];
+    const x = clamp(p.x + o.xOffset, p.x + 14, p.x + p.w - 14);
+    const y = p.y - (o.r + 2);
+    return { x, y, r: o.r };
   }
 
   const collectiblesStart = [
@@ -541,7 +595,6 @@ function requiredForLevel(lvl) {
     onTopOf(5,  90),
   ];
 
-  // ✅ Runda 3: dokładnie 14 nowych oscypków do zebrania
   const collectiblesL3Start = [
     onTopOf(0,  30), onTopOf(0, 180),
     onTopOf(1,  20), onTopOf(1, 190),
@@ -553,9 +606,15 @@ function requiredForLevel(lvl) {
     onTopOf(8,  90),
   ];
 
-  let collectibles = [];
-  let l2Added = false;
-  let l3Added = false;
+  const collectiblesL4Start = [
+    onTopOf(0,  40), onTopOf(0, 210),
+    onTopOf(1,  30), onTopOf(1, 160),
+    onTopOf(2,  50), onTopOf(2, 190),
+    onTopOf(3,  40), onTopOf(3, 130),
+    onTopOf(4,  60), onTopOf(4, 200),
+    onTopOf(5,  60), onTopOf(5, 160),
+    onTopOf(7,  60), onTopOf(7, 150),
+  ];
 
   function addCollectibles(list) {
     for (const o of list) collectibles.push({ ...o });
@@ -565,10 +624,12 @@ function requiredForLevel(lvl) {
     const pb = { x: player.x, y: player.y, w: player.w, h: player.h };
     for (const o of collectibles) {
       if (o.taken) continue;
-      const ob = { x: o.x - o.r, y: o.y - o.r, w: o.r*2, h: o.r*2 };
+      const pos = getCollectPos(o);
+      const ob = { x: pos.x - pos.r, y: pos.y - pos.r, w: pos.r*2, h: pos.r*2 };
       if (aabb(pb, ob)) {
         o.taken = true;
-        player.score += 1;
+        player.roundScore += 1;
+
         ensureAudio();
         if (audioCtx && audioCtx.state !== "suspended") {
           beep({ freq: 988, dur: 0.06, type:"triangle", gain: 0.07 });
@@ -585,24 +646,11 @@ function requiredForLevel(lvl) {
   const FRICTION = 0.82;
   const JUMP = 11.2;
 
-  let smoke = [];
-  function spawnSmoke() {
-    const chimneyX = hut.x + 130;
-    const chimneyY = hut.y + 20;
-    smoke.push({
-      x: chimneyX + (Math.random()*6 - 3),
-      y: chimneyY,
-      r: 6 + Math.random()*6,
-      a: 0.55 + Math.random()*0.2,
-      vx: 0.2 + Math.random()*0.3,
-      vy: -0.6 - Math.random()*0.6,
-      life: 120 + Math.floor(Math.random()*40)
-    });
-    if (smoke.length > 80) smoke.shift();
-  }
-
   function startLevel(nr) {
     level = nr;
+
+    // czas rundy: 4 = 45, reszta 30
+    roundTime = (level === 4) ? ROUND_TIME_L4 : ROUND_TIME_DEFAULT;
 
     player.x = playerStart.x;
     player.y = playerStart.y;
@@ -612,32 +660,38 @@ function requiredForLevel(lvl) {
     player.alive = true;
     player.invuln = 60;
 
+    // KLUCZ: wynik rundy resetujemy na początku każdej rundy
+    player.roundScore = 0;
+
     bullets = [];
     resetRoundTimer();
 
     if (level === 1) {
       cats = catsStart.map(c => ({ ...c, shootCd: 9999 }));
       collectibles = collectiblesStart.map(o => ({ ...o }));
-      l2Added = false;
-      l3Added = false;
+      l2Added = false; l3Added = false; l4Added = false;
+      platformT = 0;
     }
 
     if (level === 2) {
       cats = catsStart.map(c => ({ ...c, shootCd: 120 + Math.floor(Math.random() * 140) }));
-      if (!l2Added) {
-        addCollectibles(collectiblesL2Start);
-        l2Added = true;
-      }
+      collectibles = collectiblesL2Start.map(o => ({ ...o })); // osobna pula dla tej rundy
+      l2Added = true;
     }
 
-    // ✅ Runda 3: kot na każdym podeście + bez strzelania + dodaj 14 nowych oscypków
     if (level === 3) {
       cats = catsL3Start.map(c => ({ ...c, shootCd: 9999 }));
-      bullets = []; // czyścimy pociski z rundy 2
-      if (!l3Added) {
-        addCollectibles(collectiblesL3Start);
-        l3Added = true;
-      }
+      bullets = [];
+      collectibles = collectiblesL3Start.map(o => ({ ...o })); // osobna pula dla tej rundy
+      l3Added = true;
+    }
+
+    if (level === 4) {
+      cats = catsStart.map(c => ({ ...c, shootCd: 120 + Math.floor(Math.random() * 140) }));
+      bullets = [];
+      platformT = 0;
+      collectibles = collectiblesL4Start.map(o => ({ ...o })); // osobna pula dla tej rundy
+      l4Added = true;
     }
 
     gameOver = false;
@@ -655,14 +709,21 @@ function requiredForLevel(lvl) {
     player.alive = true; player.won = false;
     player.lives = 2;
     player.invuln = 0;
-    player.score = 0;
+    player.roundScore = 0;
 
     level = 1;
+
+    // domyślnie (przed startem) ustawiamy 30
+    roundTime = ROUND_TIME_DEFAULT;
+    timeLeft = roundTime;
+
     bullets = [];
     cats = catsStart.map(c => ({...c, shootCd: 9999 }));
     collectibles = collectiblesStart.map(o => ({...o}));
-    l2Added = false;
-    l3Added = false;
+    l2Added = false; l3Added = false; l4Added = false;
+
+    platforms = basePlatforms.map(p => ({ ...p }));
+    platformT = 0;
 
     smoke = [];
     splashes = [];
@@ -746,18 +807,19 @@ function requiredForLevel(lvl) {
     }
 
     const doorBox = { x: hut.door.x, y: hut.door.y, w: hut.door.w, h: hut.door.h };
-if (!player.won && aabb(player, doorBox)) {
-  const need = requiredForLevel(level);
+    if (!player.won && aabb(player, doorBox)) {
+      const need = requiredForLevel(level);
 
-  if (player.score >= need) {
-    if (level === 1) startLevel(2);
-    else if (level === 2) startLevel(3);
-    else win();
-  } else {
-    const missing = need - player.score;
-    setStatus(`Za mało oscypków: brakuje ${missing} (wymagane ${need})`);
-  }
-}
+      if (player.roundScore >= need) {
+        if (level === 1) startLevel(2);
+        else if (level === 2) startLevel(3);
+        else if (level === 3) startLevel(4);
+        else win();
+      } else {
+        const missing = need - player.roundScore;
+        setStatus(`Za mało oscypków: brakuje ${missing} (wymagane ${need})`);
+      }
+    }
 
     if (player.invuln > 0) player.invuln--;
   }
@@ -769,8 +831,8 @@ if (!player.won && aabb(player, doorBox)) {
       const p = platforms[c.platformIndex];
       c.y = p.y - c.h;
 
-      // ✅ Strzelanie tylko w rundzie 2
-      if (level === 2) {
+      // strzelanie w rundzie 2 i 4
+      if (level === 2 || level === 4) {
         c.shootCd--;
         if (c.shootCd <= 0 && player.alive && !player.won) {
           spawnBulletLeft(c);
@@ -852,11 +914,8 @@ if (!player.won && aabb(player, doorBox)) {
 
   // ========= Drawing =========
   function drawBackground() {
-    if (level === 3) {
-      drawCaveBackground();
-      drawWater();
-      return;
-    }
+    if (level === 3) { drawCaveBackground(); drawWater(); return; }
+    if (level === 4) { drawBieszczadyBackground(); drawWater(); return; }
 
     const g = ctx.createLinearGradient(0,0,0,H);
     g.addColorStop(0, "#cfefff");
@@ -875,6 +934,52 @@ if (!player.won && aabb(player, doorBox)) {
     drawMountain(900, 440, 620, 280, "rgba(85,130,175,0.50)");
 
     drawWater();
+  }
+
+  function drawBieszczadyBackground() {
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, "#cfefff");
+    g.addColorStop(1, "#f6fff8");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+
+    ctx.beginPath();
+    ctx.arc(150, 90, 42, 0, Math.PI*2);
+    ctx.fillStyle = "rgba(255, 230, 140, 0.95)";
+    ctx.fill();
+
+    drawHillBand(0.78, "rgba(85, 160, 120, 0.55)", 12, 0.9);
+    drawHillBand(0.86, "rgba(70, 145, 105, 0.60)", 10, 1.1);
+    drawHillBand(0.93, "rgba(60, 130, 95, 0.70)", 8,  1.3);
+
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    for (let i=0; i<8; i++) {
+      const x = 120 + i*110 + Math.sin((Date.now()/1200)+i)*10;
+      const y = 50 + (i%2)*14;
+      ctx.beginPath();
+      ctx.ellipse(x, y, 46, 18, 0, 0, Math.PI*2);
+      ctx.ellipse(x+34, y+6, 38, 14, 0, 0, Math.PI*2);
+      ctx.ellipse(x-30, y+8, 34, 13, 0, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function drawHillBand(yNorm, color, bumps, speed) {
+    const baseY = H * yNorm;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    ctx.lineTo(0, baseY);
+
+    for (let i=0; i<=bumps; i++) {
+      const x = (i/bumps) * W;
+      const wobble = Math.sin((Date.now()/1400)*speed + i*0.9) * 8;
+      const yy = baseY - 18 - Math.sin(i*0.8) * 22 + wobble;
+      ctx.quadraticCurveTo(x - (W/bumps)/2, yy, x, baseY);
+    }
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    ctx.fill();
   }
 
   function drawCaveBackground() {
@@ -968,6 +1073,30 @@ if (!player.won && aabb(player, doorBox)) {
     const y = p.y - camera.y;
 
     roundRect(x, y, p.w, p.h, 8);
+
+    if (level === 4) {
+      const stone = ctx.createLinearGradient(0, y, 0, y+p.h);
+      stone.addColorStop(0, "#f3f4f6");
+      stone.addColorStop(1, "#d1d5db");
+      ctx.fillStyle = stone;
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(17,24,39,0.18)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(17,24,39,0.10)";
+      ctx.lineWidth = 1;
+      for (let i=0; i<4; i++) {
+        const yy = y + 5 + i*(p.h-10)/3;
+        ctx.beginPath();
+        ctx.moveTo(x + 10, yy);
+        ctx.lineTo(x + p.w - 10, yy);
+        ctx.stroke();
+      }
+      return;
+    }
+
     const wood = ctx.createLinearGradient(0, y, 0, y+p.h);
     wood.addColorStop(0, "#c18b55");
     wood.addColorStop(1, "#a87445");
@@ -1005,7 +1134,8 @@ if (!player.won && aabb(player, doorBox)) {
   function drawCollectibles() {
     for (const o of collectibles) {
       if (o.taken) continue;
-      drawOscypek(o.x - camera.x, o.y - camera.y, o.r);
+      const pos = getCollectPos(o);
+      drawOscypek(pos.x - camera.x, pos.y - camera.y, pos.r);
     }
   }
 
@@ -1226,11 +1356,13 @@ if (!player.won && aabb(player, doorBox)) {
     ctx.fillRect(0, 0, W, 56);
 
     ctx.fillStyle = "#ffffff";
-    ctx.font = "20px monospace";
     ctx.textBaseline = "top";
 
+    // lewa strona
+    ctx.font = "20px monospace";
     ctx.fillText("TECHICHI", 18, 10);
 
+    // oscypek + licznik rundy (dla wyglądu)
     const ox = 180, oy = 14;
     ctx.fillStyle = "#f4d27a";
     ctx.beginPath();
@@ -1239,28 +1371,34 @@ if (!player.won && aabb(player, doorBox)) {
     ctx.strokeStyle = "rgba(0,0,0,0.35)";
     ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.fillStyle = "#ffffff";
 
-    const scoreStr = String(player.score).padStart(2, "0");
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "20px monospace";
+    const scoreStr = String(player.roundScore).padStart(2, "0");
     ctx.fillText("x " + scoreStr, 200, 10);
 
-   ctx.fillText("WORLD", W/2 - 70, 10);
-ctx.fillText(String(level) + "-1", W/2 - 38, 32);
+    // środek
+    ctx.fillText("WORLD", W/2 - 70, 10);
+    ctx.fillText(String(level) + "-1", W/2 - 38, 32);
 
-// CEL (przed LIFE) – ta sama czcionka co HUD (20px monospace)
-const need = requiredForLevel(level);
+    // prawa strona: CEL PRZED LIFE, taki sam font jak LIFE
+    const need = requiredForLevel(level);
 
-ctx.textAlign = "left";
-ctx.font = "20px monospace";
-ctx.fillText(`CEL ${player.score}/${need}`, W - 360, 10);
+    // CEL (font jak LIFE = 20px monospace)
+    ctx.font = "20px monospace";
+    ctx.fillText("CEL", W - 300, 10);
+    ctx.fillText(`${String(player.roundScore).padStart(2,"0")}/${String(need).padStart(2,"0")}`, W - 260, 10);
 
-ctx.fillText("LIFE", W - 180, 10);
-ctx.font = "20px system-ui, sans-serif";
-ctx.fillText(livesToHearts(player.lives), W - 120, 10);
+    // LIFE
+    ctx.font = "20px monospace";
+    ctx.fillText("LIFE", W - 180, 10);
+    ctx.font = "20px system-ui, sans-serif";
+    ctx.fillText(livesToHearts(player.lives), W - 120, 10);
 
-ctx.font = "20px monospace";
-ctx.fillText("TIME", W - 180, 32);
-ctx.fillText(formatTimeLeft(),  W - 120, 32);
+    // TIME
+    ctx.font = "20px monospace";
+    ctx.fillText("TIME", W - 180, 32);
+    ctx.fillText(formatTimeLeft(),  W - 120, 32);
 
     ctx.restore();
   }
@@ -1269,6 +1407,8 @@ ctx.fillText(formatTimeLeft(),  W - 120, 32);
     if (paused) return;
 
     if (!gameOver) {
+      updatePlatforms(dt);
+
       timeLeft -= dt;
       if (timeLeft <= 0) {
         timeLeft = 0;
@@ -1331,7 +1471,7 @@ ctx.fillText(formatTimeLeft(),  W - 120, 32);
       ctx.fillStyle = "#111827";
       ctx.font = "20px system-ui, sans-serif";
       ctx.fillText(
-        player.won ? `Wygrana! Zebrane oscypki: ${player.score} 🧀` : "Koniec gry! Brak serc 💔",
+        player.won ? `Wygrana! Zebrane oscypki: ${player.roundScore} 🧀` : "Koniec gry! Brak serc 💔",
         W/2 - 200, H/2 - 18
       );
       ctx.font = "14px system-ui, sans-serif";
@@ -1339,6 +1479,49 @@ ctx.fillText(formatTimeLeft(),  W - 120, 32);
     }
   }
 
+  function updateCats() {
+    for (const c of cats) {
+      if (!c.alive) continue;
+
+      const p = platforms[c.platformIndex];
+      c.y = p.y - c.h;
+
+      if (level === 2 || level === 4) {
+        c.shootCd--;
+        if (c.shootCd <= 0 && player.alive && !player.won) {
+          spawnBulletLeft(c);
+          c.shootCd = 130 + Math.floor(Math.random() * 170);
+        }
+      }
+
+      c.x += c.vx;
+      const leftEdge = p.x + 6;
+      const rightEdge = p.x + p.w - c.w - 6;
+
+      if (c.x < leftEdge) { c.x = leftEdge; c.vx *= -1; }
+      if (c.x > rightEdge) { c.x = rightEdge; c.vx *= -1; }
+
+      if (!player.alive || player.won) continue;
+      if (player.invuln > 0) continue;
+
+      if (aabb(player, c)) {
+        const playerBottom = player.y + player.h;
+        const catTop = c.y;
+        const falling = player.vy > 0.5;
+
+        if (falling && (playerBottom - catTop) < 14) {
+          c.alive = false;
+          player.vy = -8.5;
+          ensureAudio();
+          if (audioCtx && audioCtx.state !== "suspended") beep({ freq: 980, dur: 0.09, type:"triangle", gain: 0.06 });
+        } else {
+          loseLife("Kot Cię dotknął");
+        }
+      }
+    }
+  }
+
+  // ========= Loop =========
   let lastT = 0;
   function loop(t) {
     const now = t || performance.now();
@@ -1355,6 +1538,24 @@ ctx.fillText(formatTimeLeft(),  W - 120, 32);
   loop();
 
 })();
+</script>
+
+<script>
+  (function () {
+    const overlay = document.getElementById('rotateOverlay');
+
+    function updateRotateOverlay() {
+      const portrait = window.innerHeight > window.innerWidth;
+      const small = Math.min(window.innerWidth, window.innerHeight) < 900;
+
+      if (portrait && small) overlay.style.display = 'flex';
+      else overlay.style.display = 'none';
+    }
+
+    window.addEventListener('resize', updateRotateOverlay);
+    window.addEventListener('orientationchange', updateRotateOverlay);
+    updateRotateOverlay();
+  })();
 </script>
 </body>
 </html>
