@@ -45,7 +45,7 @@
     }
 
     /* START SCREEN (PLAKAT) */
-    #splash {
+    #splash, #midPoster {
       position: fixed;
       inset: 0;
       background: #0b1220;
@@ -54,21 +54,23 @@
       z-index: 9999;
       cursor: pointer;
     }
-    #splash .frame{
+    #midPoster { display: none; }
+
+    #splash .frame, #midPoster .frame{
       width: min(980px, 96vw);
       border-radius: 18px;
       overflow: hidden;
       box-shadow: 0 18px 60px rgba(0,0,0,.45);
       position: relative;
     }
-    #splash img{
+    #splash img, #midPoster img{
       display: block;
       width: 60%;
       max-width: 500px;
       height: auto;
       margin: 0 auto;
     }
-    #splash .cta{
+    #splash .cta, #midPoster .cta{
       position: absolute;
       left: 50%;
       bottom: 18px;
@@ -81,7 +83,7 @@
       border: 1px solid rgba(255,255,255,.18);
       backdrop-filter: blur(6px);
     }
-    #splash .hint2{
+    #splash .hint2, #midPoster .hint2{
       position: absolute;
       left: 50%;
       top: 14px;
@@ -102,6 +104,15 @@
       <img src="./plakat.png" alt="Plakat Techichi" />
       <div class="hint2">Kliknij, aby rozpocząć</div>
       <div class="cta">🎮 Start</div>
+    </div>
+  </div>
+
+  <!-- PLAKAT po rundzie 5 -->
+  <div id="midPoster" aria-label="Plakat po rundzie 5">
+    <div class="frame">
+      <img src="./plakat2.png" alt="Plakat - Połowa drogi" />
+      <div class="hint2">Kliknij, aby kontynuować</div>
+      <div class="cta">🏁 Dalej</div>
     </div>
   </div>
 
@@ -147,6 +158,7 @@
   const toggleBtn  = document.getElementById("toggleBtn");
   const musicBtn   = document.getElementById("musicBtn");
   const splash     = document.getElementById("splash");
+  const midPoster  = document.getElementById("midPoster");
 
   const W = canvas.width, H = canvas.height;
 
@@ -272,7 +284,7 @@
   let timeLeft = roundTime;
 
   // ========= REQUIREMENTS (oscypki in THIS round) =========
-  const REQUIRED_OSCYPKI = { 1: 5, 2: 8, 3: 10, 4: 10 };
+  const REQUIRED_OSCYPKI = { 1: 5, 2: 8, 3: 10, 4: 10, 5: 10 };
   function requiredForLevel(lvl) { return REQUIRED_OSCYPKI[lvl] ?? 0; }
 
   function resetRoundTimer() { timeLeft = roundTime; }
@@ -313,11 +325,24 @@
   let cats = [];
   let collectibles = [];
 
+  // ====== SPIKES (only level 5) ======
+  let spikes = [];
+
+  function spikeOn(pIndex, xOffset, w=28, h=16) {
+    return { platformIndex: pIndex, xOffset, w, h };
+  }
+  function getSpikeRect(s) {
+    const p = platforms[s.platformIndex];
+    const x = clamp(p.x + s.xOffset, p.x + 10, p.x + p.w - s.w - 10);
+    const y = p.y - s.h;
+    return { x, y, w: s.w, h: s.h };
+  }
+
   function updatePlatforms(dt) {
     const prev = platforms;
     platforms = basePlatforms.map(p => ({ ...p }));
 
-    if (level !== 4) return;
+    if (level !== 4 && level !== 5) return;
 
     platformT += dt;
 
@@ -367,8 +392,8 @@
     invuln: 0,
 
     // Wyniki:
-    totalScore: 0, // suma oscypków zebranych w całej grze
-    roundScore: 0, // oscypki zebrane w tej rundzie (CEL)
+    totalScore: 0,
+    roundScore: 0,
 
     lastFace: 1
   };
@@ -411,7 +436,7 @@
   }
 
   // ========= Enemies =========
-  function makeCatOnPlatform(platformIndex, x, dir) {
+  function makeCatOnPlatform(platformIndex, x, dir, kind="gray") {
     const p = platforms[platformIndex];
     const w = 40, h = 28;
     const safeX = clamp(x, p.x + 8, p.x + p.w - w - 8);
@@ -422,7 +447,8 @@
       w, h,
       vx: 1.05 * dir,
       alive: true,
-      shootCd: 9999
+      shootCd: 9999,
+      kind
     };
   }
 
@@ -473,6 +499,12 @@
     makeCatOnPlatform(2, 560,  1),
     makeCatOnPlatform(5, 1600, -1),
     makeCatOnPlatform(7, 2300,  1),
+  ];
+
+  const catsL5Start = [
+    makeCatOnPlatform(2, 560,  1, "yellow"),
+    makeCatOnPlatform(5, 1600, -1, "yellow"),
+    makeCatOnPlatform(7, 2300,  1, "yellow"),
   ];
 
   const catsL3Start = basePlatforms.map((p, idx) => {
@@ -541,6 +573,22 @@
     onTopOf(7,  60), onTopOf(7, 150),
   ];
 
+  const collectiblesL5Start = [
+    onTopOf(0,  80), onTopOf(1,  70),
+    onTopOf(2,  60), onTopOf(2, 180),
+    onTopOf(3,  60), onTopOf(4, 120),
+    onTopOf(5,  70), onTopOf(6, 120),
+    onTopOf(7,  70), onTopOf(8,  80),
+  ];
+
+  const spikesL5Start = [
+    spikeOn(1, 120),
+    spikeOn(2, 120),
+    spikeOn(4, 80),
+    spikeOn(5, 140),
+    spikeOn(7, 120),
+  ];
+
   function collectCheck() {
     const pb = { x: player.x, y: player.y, w: player.w, h: player.h };
     for (const o of collectibles) {
@@ -549,11 +597,7 @@
       const ob = { x: pos.x - pos.r, y: pos.y - pos.r, w: pos.r*2, h: pos.r*2 };
       if (aabb(pb, ob)) {
         o.taken = true;
-
-        // CEL (runda) rośnie tylko w tej rundzie:
         player.roundScore += 1;
-
-        // X (suma gry) rośnie zawsze:
         player.totalScore += 1;
 
         ensureAudio();
@@ -561,6 +605,21 @@
           beep({ freq: 988, dur: 0.06, type:"triangle", gain: 0.07 });
           setTimeout(() => beep({ freq: 1175, dur: 0.07, type:"triangle", gain: 0.06 }), 55);
         }
+      }
+    }
+  }
+
+  function spikeCheck() {
+    if (level !== 5) return;
+    if (!player.alive || player.won) return;
+    if (player.invuln > 0) return;
+
+    const pb = { x: player.x, y: player.y, w: player.w, h: player.h };
+    for (const s of spikes) {
+      const r = getSpikeRect(s);
+      if (aabb(pb, r)) {
+        loseLife("Kolce");
+        return;
       }
     }
   }
@@ -588,11 +647,22 @@
     }
   }
 
+  function showMidPoster() {
+    paused = true;
+    gameOver = true;
+    if (midPoster) midPoster.style.display = "grid";
+    setStatus("Połowa drogi! Kliknij plakat, aby wrócić do startu.");
+  }
+
+  function hideMidPoster() {
+    if (midPoster) midPoster.style.display = "none";
+  }
+
   function startLevel(nr) {
     level = nr;
 
-    // czas rundy: 4 = 45, reszta 30
-    roundTime = (level === 4) ? ROUND_TIME_L4 : ROUND_TIME_DEFAULT;
+    // czas rundy: 4 i 5 = 45, reszta 30
+    roundTime = (level === 4 || level === 5) ? ROUND_TIME_L4 : ROUND_TIME_DEFAULT;
 
     player.x = playerStart.x;
     player.y = playerStart.y;
@@ -602,34 +672,43 @@
     player.alive = true;
     player.invuln = 60;
 
-    // KLUCZ: resetuje się tylko CEL (runda)
+    // resetuje się tylko CEL (runda)
     player.roundScore = 0;
 
     bullets = [];
+    spikes = [];
     resetRoundTimer();
 
     if (level === 1) {
-      cats = catsStart.map(c => ({ ...c, shootCd: 9999 }));
+      cats = catsStart.map(c => ({ ...c, shootCd: 9999, kind: c.kind ?? "gray" }));
       collectibles = collectiblesStart.map(o => ({ ...o }));
       platformT = 0;
     }
 
     if (level === 2) {
-      cats = catsStart.map(c => ({ ...c, shootCd: 120 + Math.floor(Math.random() * 140) }));
+      cats = catsStart.map(c => ({ ...c, shootCd: 120 + Math.floor(Math.random() * 140), kind: c.kind ?? "gray" }));
       collectibles = collectiblesL2Start.map(o => ({ ...o }));
     }
 
     if (level === 3) {
-      cats = catsL3Start.map(c => ({ ...c, shootCd: 9999 }));
+      cats = catsL3Start.map(c => ({ ...c, shootCd: 9999, kind: c.kind ?? "gray" }));
       bullets = [];
       collectibles = collectiblesL3Start.map(o => ({ ...o }));
     }
 
     if (level === 4) {
-      cats = catsStart.map(c => ({ ...c, shootCd: 120 + Math.floor(Math.random() * 140) }));
+      cats = catsStart.map(c => ({ ...c, shootCd: 120 + Math.floor(Math.random() * 140), kind: c.kind ?? "gray" }));
       bullets = [];
       platformT = 0;
       collectibles = collectiblesL4Start.map(o => ({ ...o }));
+    }
+
+    if (level === 5) {
+      cats = catsL5Start.map(c => ({ ...c, shootCd: 9999, kind: "yellow" }));
+      bullets = [];
+      platformT = 0;
+      collectibles = collectiblesL5Start.map(o => ({ ...o }));
+      spikes = spikesL5Start.map(s => ({ ...s }));
     }
 
     gameOver = false;
@@ -642,6 +721,7 @@
     if (started) return;
     started = true;
 
+    hideMidPoster();
     if (splash) splash.style.display = "none";
     startLevel(1);
     paused = false;
@@ -651,6 +731,11 @@
   }
 
   if (splash) splash.addEventListener("pointerdown", startFromSplash);
+
+  if (midPoster) midPoster.addEventListener("pointerdown", () => {
+    hideMidPoster();
+    reset();
+  });
 
   const btnLeft  = document.getElementById("btnLeft");
   const btnRight = document.getElementById("btnRight");
@@ -709,7 +794,8 @@
     timeLeft = roundTime;
 
     bullets = [];
-    cats = catsStart.map(c => ({...c, shootCd: 9999 }));
+    spikes = [];
+    cats = catsStart.map(c => ({...c, shootCd: 9999, kind: c.kind ?? "gray" }));
     collectibles = collectiblesStart.map(o => ({...o}));
 
     platforms = basePlatforms.map(p => ({ ...p }));
@@ -723,6 +809,8 @@
 
     paused = true;
     started = false;
+
+    hideMidPoster();
     if (splash) splash.style.display = "grid";
     toggleBtn.textContent = "Pauza";
     heartFx.active = false;
@@ -789,12 +877,13 @@
     player.vy = clamp(player.vy, -999, 14);
 
     resolvePlatforms(player);
+    spikeCheck();
     collectCheck();
 
-    // woda = strata życia + respawn
+    // woda / lawa = strata życia + respawn
     if (player.y + player.h > WATER_Y) {
       spawnSplash(player.x + player.w/2, WATER_Y);
-      loseLife("Wpadłeś do wody");
+      loseLife(level === 5 ? "Wpadłeś do lawy" : "Wpadłeś do wody");
 
       if (player.alive) {
         player.x = playerStart.x;
@@ -815,6 +904,8 @@
         if (level === 1) startLevel(2);
         else if (level === 2) startLevel(3);
         else if (level === 3) startLevel(4);
+        else if (level === 4) startLevel(5);
+        else if (level === 5) showMidPoster();
         else win();
       } else {
         const missing = need - player.roundScore;
@@ -894,17 +985,17 @@
     if (player.lives <= 0) {
       player.alive = false;
       gameOver = true;
-      setStatus("Przegrana – brak serc. Restart?");
+      setStatus("Przegrana - brak serc. Restart?");
       return;
     }
 
-    setStatus(reason + " – zostało: " + livesToHearts(player.lives));
+    setStatus(reason + " - zostało: " + livesToHearts(player.lives));
   }
 
   function win() {
     player.won = true;
     gameOver = true;
-    setStatus("Wygrana – masz oscypki! Restart?");
+    setStatus("Wygrana - masz oscypki! Restart?");
     ensureAudio();
     if (audioCtx && audioCtx.state !== "suspended") {
       beep({ freq: 784, dur: 0.12, type:"triangle", gain: 0.07 });
@@ -917,6 +1008,7 @@
   function drawBackground() {
     if (level === 3) { drawCaveBackground(); drawWater(); return; }
     if (level === 4) { drawBieszczadyBackground(); drawWater(); return; }
+    if (level === 5) { drawCaveBackground(); drawLava(); return; }
 
     const g = ctx.createLinearGradient(0,0,0,H);
     g.addColorStop(0, "#cfefff");
@@ -1040,6 +1132,24 @@
     }
   }
 
+  function drawLava() {
+    const y = WATER_Y - camera.y;
+    const lavaG = ctx.createLinearGradient(0, y, 0, H);
+    lavaG.addColorStop(0, "rgba(255, 120, 40, 0.65)");
+    lavaG.addColorStop(1, "rgba(180, 30, 10, 0.88)");
+    ctx.fillStyle = lavaG;
+    ctx.fillRect(0, y, W, H - y);
+
+    ctx.fillStyle = "rgba(255,220,120,0.22)";
+    for (let i=0; i<14; i++) {
+      const xx = (i*70 + ((Date.now()/14) % 70));
+      const rr = 10 + (i%3)*4;
+      ctx.beginPath();
+      ctx.arc(xx, y + 24 + (i%2)*10, rr, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
   function drawMountain(cx, baseY, width, height, color) {
     ctx.fillStyle = color;
     ctx.beginPath();
@@ -1075,7 +1185,7 @@
 
     roundRect(x, y, p.w, p.h, 8);
 
-    if (level === 4) {
+    if (level === 4 || level === 5) {
       const stone = ctx.createLinearGradient(0, y, 0, y+p.h);
       stone.addColorStop(0, "#f3f4f6");
       stone.addColorStop(1, "#d1d5db");
@@ -1116,6 +1226,25 @@
       ctx.moveTo(x + 10, yy);
       ctx.lineTo(x + p.w - 10, yy);
       ctx.stroke();
+    }
+  }
+
+  function drawSpikes() {
+    for (const s of spikes) {
+      const r = getSpikeRect(s);
+      const x = r.x - camera.x;
+      const y = r.y - camera.y;
+
+      ctx.fillStyle = "#ef4444";
+      const tooth = r.w / 3;
+      for (let i=0; i<3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x + i*tooth, y + r.h);
+        ctx.lineTo(x + i*tooth + tooth/2, y);
+        ctx.lineTo(x + i*tooth + tooth, y + r.h);
+        ctx.closePath();
+        ctx.fill();
+      }
     }
   }
 
@@ -1214,10 +1343,14 @@
     ctx.ellipse(x + c.w/2, y + c.h + 2, 14, 5, 0, 0, Math.PI*2);
     ctx.fill();
 
-    const body = (level === 3) ? "#ef4444" : "#9ca3af";
-    const head = (level === 3) ? "#fb7185" : "#b0b7c3";
-    const ear  = (level === 3) ? "#dc2626" : "#9ca3af";
-    const tail = (level === 3) ? "#ef4444" : "#9ca3af";
+    let body="#9ca3af", head="#b0b7c3", ear="#9ca3af", tail="#9ca3af";
+
+    if (level === 3) {
+      body="#ef4444"; head="#fb7185"; ear="#dc2626"; tail="#ef4444";
+    }
+    if (c.kind === "yellow") {
+      body="#fbbf24"; head="#fde68a"; ear="#f59e0b"; tail="#fbbf24";
+    }
 
     ctx.fillStyle = body;
     ctx.beginPath();
@@ -1437,6 +1570,7 @@
 
     for (const p of platforms) drawPlatform(p);
 
+    drawSpikes();
     drawCollectibles();
     drawHut();
     drawSmoke();
@@ -1454,7 +1588,7 @@
     drawBrokenHeartFX();
     drawHUD();
 
-    if (gameOver) {
+    if (gameOver && level !== 5) {
       ctx.fillStyle = "rgba(17,24,39,0.35)";
       ctx.fillRect(0,0,W,H);
       ctx.fillStyle = "rgba(255,255,255,0.92)";
