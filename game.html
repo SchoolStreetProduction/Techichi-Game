@@ -6,21 +6,71 @@
   <title>Techichi - Straznik Gor</title>
   <style>
     :root { color-scheme: light; }
-    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    body { display: grid; place-items: center; background: #f6f7fb; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    body {
+      display: grid;
+      place-items: center;
+      background: #f6f7fb;
+    }
     .wrap { width: min(980px, 96vw); }
-    .topbar { display:flex; align-items:center; justify-content:space-between; gap: 12px; margin: 10px 0 8px; }
+    .topbar {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      margin: 10px 0 8px;
+    }
     .title { font-weight: 700; }
-    .hint { font-size: 14px; opacity: .8; line-height: 1.25; }
-    canvas { width: 100%; height: auto; border-radius: 16px; box-shadow: 0 10px 28px rgba(0,0,0,.08); background: #cfefff; touch-action: none; }
-    .controls { display:flex; gap: 10px; flex-wrap: wrap; margin: 10px 0 14px; }
-    button { border: 0; border-radius: 12px; padding: 10px 14px; background: #111827; color: white; font-weight: 650; cursor: pointer; }
-    button.secondary { background:#e5e7eb; color:#111827; }
-    .pill { font-size: 13px; padding: 6px 10px; border-radius: 999px; background:#ffffffcc; border: 1px solid #ffffff; backdrop-filter: blur(6px); }
+    .hint {
+      font-size: 14px;
+      opacity: .8;
+      line-height: 1.25;
+    }
+    canvas {
+      width: 100%;
+      height: auto;
+      border-radius: 16px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.08);
+      background: #cfefff;
+      touch-action: none;
+    }
+    .controls {
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 10px 0 14px;
+    }
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      background: #111827;
+      color: white;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    button.secondary {
+      background:#e5e7eb;
+      color:#111827;
+    }
+    .pill {
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background:#ffffffcc;
+      border: 1px solid #ffffff;
+      backdrop-filter: blur(6px);
+    }
 
     .touch {
       position: fixed;
-      left: 0; right: 0; bottom: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       display: none;
       padding: 14px;
       gap: 12px;
@@ -29,9 +79,14 @@
       z-index: 50;
       pointer-events: none;
     }
-    .touch .group { display: flex; gap: 12px; pointer-events: auto; }
+    .touch .group {
+      display: flex;
+      gap: 12px;
+      pointer-events: auto;
+    }
     .touch button {
-      width: 74px; height: 74px;
+      width: 74px;
+      height: 74px;
       border-radius: 18px;
       font-size: 16px;
       font-weight: 700;
@@ -107,7 +162,7 @@
     <div class="topbar">
       <div>
         <div class="title">Techichi - Straznik Gor</div>
-        <div class="hint">Sterowanie: lewo/prawo - ruch, spacja - skok. Zbieraj oscypki. Uwazaj na koty, pociski i wode.</div>
+        <div class="hint">Sterowanie: lewo/prawo - ruch, spacja - skok. Zbieraj oscypki. Uwazaj na koty, pociski, kolce i wode.</div>
       </div>
       <div class="pill" id="statusPill">Kliknij plakat, aby zaczac</div>
     </div>
@@ -153,15 +208,17 @@
   const TOTAL_LEVELS = 5;
 
   const endingImg = new Image();
+  let endingImgReady = false;
+  endingImg.onload = () => { endingImgReady = true; };
+  endingImg.onerror = () => { endingImgReady = false; };
   endingImg.src = "./plakat2.png";
 
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const aabb = (a, b) => (
+  const aabb = (a, b) =>
     a.x < b.x + b.w &&
     a.x + a.w > b.x &&
     a.y < b.y + b.h &&
-    a.y + a.h > b.y
-  );
+    a.y + a.h > b.y;
 
   let audioCtx = null;
   let musicOn = true;
@@ -329,6 +386,7 @@
   let bullets = [];
   let cats = [];
   let collectibles = [];
+  let spikes = [];
 
   const hut = {
     x: 2605, y: 280, w: 170, h: 170,
@@ -396,7 +454,7 @@
     if (smoke.length > 80) smoke.shift();
   }
 
-  function makeCatOnPlatform(platformIndex, x, dir) {
+  function makeCatOnPlatform(platformIndex, x, dir, shoot=false) {
     const p = platforms[platformIndex];
     const w = 40, h = 28;
     const safeX = clamp(x, p.x + 8, p.x + p.w - w - 8);
@@ -407,30 +465,24 @@
       w, h,
       vx: 1.05 * dir,
       alive: true,
-      shootCd: 9999,
-      centered: false
+      centered: false,
+      shooter: shoot,
+      shootCd: shoot ? 80 + Math.floor(Math.random() * 80) : 9999
     };
   }
 
-  function makeCenteredCatOnPlatform(platformIndex) {
-    const p = platforms[platformIndex];
-    const w = 40, h = 28;
-    return {
-      platformIndex,
-      x: p.x + (p.w - w) / 2,
-      y: p.y - h,
-      w, h,
-      vx: 0,
-      alive: true,
-      shootCd: 9999,
-      centered: true
-    };
-  }
-
-  function spawnBulletLeft(fromCat) {
-    const bx = fromCat.x - 2;
-    const by = fromCat.y + fromCat.h * 0.55;
-    bullets.push({ x: bx, y: by, vx: -3.0, vy: 0, r: 5, life: 320 });
+  function spawnBulletFromCat(cat) {
+    const px = player.x + player.w * 0.5;
+    const cx = cat.x + cat.w * 0.5;
+    const dir = px >= cx ? 1 : -1;
+    bullets.push({
+      x: cx + dir * 16,
+      y: cat.y + cat.h * 0.55,
+      vx: 3.2 * dir,
+      vy: 0,
+      r: 5,
+      life: 320
+    });
   }
 
   function updateBullets() {
@@ -441,7 +493,7 @@
       b.y += b.vy;
       b.life--;
 
-      if (b.y > WATER_Y) b.life = 0;
+      if (b.y > WATER_Y || b.x < -50 || b.x > WORLD_W + 50) b.life = 0;
 
       const bb = { x: b.x - b.r, y: b.y - b.r, w: b.r * 2, h: b.r * 2 };
       if (player.alive && player.invuln <= 0 && aabb(pb, bb)) {
@@ -470,18 +522,13 @@
     }
   }
 
-  function centerOffsetFor(platformIndex) {
-    const p = basePlatforms[platformIndex];
-    return (p.w - 28) / 2;
-  }
-
   function onTopOf(platformIndex, xOffset, r=10) {
     return { platformIndex, xOffset, r, taken: false };
   }
 
   function centerCollect(platformIndex, r=10) {
     const p = basePlatforms[platformIndex];
-    return onTopOf(platformIndex, p.w / 2, r);
+    return onTopOf(platformIndex, p.w * 0.5, r);
   }
 
   function getCollectPos(o) {
@@ -491,18 +538,55 @@
     return { x, y, r: o.r };
   }
 
+  function makeSpikeOnPlatform(platformIndex, count=4) {
+    return {
+      platformIndex,
+      count,
+      w: 72,
+      h: 18,
+      x: 0,
+      y: 0
+    };
+  }
+
+  function updateSpikePositions() {
+    for (const s of spikes) {
+      const p = platforms[s.platformIndex];
+      s.x = p.x + (p.w - s.w) * 0.5;
+      s.y = p.y - s.h;
+    }
+  }
+
   const catsStart = [
-    makeCatOnPlatform(2, 560, 1),
-    makeCatOnPlatform(5, 1600, -1),
-    makeCatOnPlatform(7, 2300, 1)
+    makeCatOnPlatform(2, 560, 1, false),
+    makeCatOnPlatform(5, 1600, -1, false),
+    makeCatOnPlatform(7, 2300, 1, false)
+  ];
+
+  const catsL2Start = [
+    makeCatOnPlatform(2, 560, 1, true),
+    makeCatOnPlatform(5, 1600, -1, true),
+    makeCatOnPlatform(7, 2300, 1, true)
   ];
 
   const catsL3Start = basePlatforms.map((p, idx) => {
     const dir = (idx % 2 === 0) ? 1 : -1;
-    return makeCatOnPlatform(idx, p.x + p.w * 0.5, dir);
+    return makeCatOnPlatform(idx, p.x + p.w * 0.5, dir, false);
   });
 
-  const catsL5Start = [0,1,2,3,4,5,6,7,8].map(idx => makeCenteredCatOnPlatform(idx));
+  const catsL4Start = [
+    makeCatOnPlatform(1, 280, 1, true),
+    makeCatOnPlatform(3, 910, -1, true),
+    makeCatOnPlatform(5, 1590, 1, true),
+    makeCatOnPlatform(7, 2260, -1, true)
+  ];
+
+  const catsL5Start = [
+    makeCatOnPlatform(1, 280, 1, true),
+    makeCatOnPlatform(3, 900, -1, true),
+    makeCatOnPlatform(5, 1580, 1, true),
+    makeCatOnPlatform(7, 2260, -1, true)
+  ];
 
   const collectiblesStart = [
     onTopOf(0, 70), onTopOf(0, 140), onTopOf(0, 210),
@@ -544,14 +628,17 @@
     centerCollect(0), centerCollect(1), centerCollect(2),
     centerCollect(3), centerCollect(4), centerCollect(5),
     centerCollect(6), centerCollect(7), centerCollect(8),
-    onTopOf(0, 80), onTopOf(4, 90), onTopOf(8, 90)
+    onTopOf(0, 90), onTopOf(4, 120), onTopOf(8, 70)
   ];
 
   function updatePlatforms(dt) {
     platformPrev = platforms.map(p => ({ ...p }));
     platforms = basePlatforms.map(p => ({ ...p }));
 
-    if (level !== 4 && level !== 5) return;
+    if (level !== 4 && level !== 5) {
+      updateSpikePositions();
+      return;
+    }
 
     platformT += dt;
 
@@ -569,7 +656,7 @@
       for (const i of movingIdx) {
         const p = platforms[i];
         const base = basePlatforms[i];
-        p.x = base.x + Math.sin(platformT * 1.45 + i * 0.8) * 95;
+        p.x = base.x + Math.sin(platformT * 1.25 + i * 0.85) * 85;
       }
     }
 
@@ -579,12 +666,10 @@
       const oldP = platformPrev[idx];
       const newP = platforms[idx];
       if (!oldP || !newP) continue;
-      if (c.centered) {
-        c.x = newP.x + (newP.w - c.w) / 2;
-      } else {
-        c.x += (newP.x - oldP.x);
-      }
+      c.x += (newP.x - oldP.x);
     }
+
+    updateSpikePositions();
   }
 
   function getStandingPlatformDelta() {
@@ -608,6 +693,7 @@
         o.taken = true;
         player.roundScore += 1;
         player.totalScore += 1;
+
         ensureAudio();
         if (audioCtx && audioCtx.state !== "suspended") {
           beep({ freq: 988, dur: 0.06, type: "triangle", gain: 0.07 });
@@ -652,27 +738,40 @@
     player.roundScore = 0;
 
     bullets = [];
+    spikes = [];
     resetRoundTimer();
     platformT = 0;
     platforms = basePlatforms.map(p => ({ ...p }));
     platformPrev = basePlatforms.map(p => ({ ...p }));
 
     if (level === 1) {
-      cats = catsStart.map(c => ({ ...c, shootCd: 9999 }));
+      cats = catsStart.map(c => ({ ...c }));
       collectibles = collectiblesStart.map(o => ({ ...o }));
     } else if (level === 2) {
-      cats = catsStart.map(c => ({ ...c, shootCd: 120 + Math.floor(Math.random() * 140) }));
+      cats = catsL2Start.map(c => ({ ...c, shootCd: 90 + Math.floor(Math.random() * 90) }));
       collectibles = collectiblesL2Start.map(o => ({ ...o }));
     } else if (level === 3) {
-      cats = catsL3Start.map(c => ({ ...c, shootCd: 9999 }));
+      cats = catsL3Start.map(c => ({ ...c }));
       collectibles = collectiblesL3Start.map(o => ({ ...o }));
     } else if (level === 4) {
-      cats = catsStart.map(c => ({ ...c, shootCd: 120 + Math.floor(Math.random() * 140) }));
+      cats = catsL4Start.map(c => ({ ...c, shootCd: 80 + Math.floor(Math.random() * 90) }));
       collectibles = collectiblesL4Start.map(o => ({ ...o }));
     } else if (level === 5) {
-      cats = catsL5Start.map(c => ({ ...c, shootCd: 9999 }));
+      cats = catsL5Start.map(c => ({ ...c, shootCd: 65 + Math.floor(Math.random() * 70) }));
       collectibles = collectiblesL5Start.map(o => ({ ...o }));
+      spikes = [
+        makeSpikeOnPlatform(0),
+        makeSpikeOnPlatform(1),
+        makeSpikeOnPlatform(2),
+        makeSpikeOnPlatform(3),
+        makeSpikeOnPlatform(4),
+        makeSpikeOnPlatform(5),
+        makeSpikeOnPlatform(6),
+        makeSpikeOnPlatform(7)
+      ];
     }
+
+    updateSpikePositions();
 
     gameOver = false;
     gameFinished = false;
@@ -712,6 +811,7 @@
   window.addEventListener("keydown", (e) => {
     if (["ArrowLeft", "ArrowRight", "Space", "KeyP", "ArrowUp", "KeyR", "Enter"].includes(e.code)) e.preventDefault();
     if (!started && (e.code === "Enter" || e.code === "Space")) startFromSplash();
+
     keys.add(e.code);
     if (e.code === "KeyP") togglePause();
     if (e.code === "KeyR") reset();
@@ -749,8 +849,9 @@
     timeLeft = roundTime;
 
     bullets = [];
-    cats = catsStart.map(c => ({ ...c, shootCd: 9999 }));
+    cats = catsStart.map(c => ({ ...c }));
     collectibles = collectiblesStart.map(o => ({ ...o }));
+    spikes = [];
 
     platforms = basePlatforms.map(p => ({ ...p }));
     platformPrev = basePlatforms.map(p => ({ ...p }));
@@ -801,6 +902,29 @@
     }
   }
 
+  function checkSpikeHit() {
+    if (level !== 5 || player.invuln > 0 || !player.alive || player.won) return;
+
+    const footBox = {
+      x: player.x + 6,
+      y: player.y + player.h - 8,
+      w: player.w - 12,
+      h: 10
+    };
+
+    for (const s of spikes) {
+      const sb = { x: s.x, y: s.y, w: s.w, h: s.h };
+      if (aabb(footBox, sb)) {
+        loseLife("Nadziales sie na kolce");
+        if (player.alive) {
+          respawnPlayer();
+          resetRoundTimer();
+        }
+        return;
+      }
+    }
+  }
+
   function updatePlayer() {
     if (!player.alive || player.won) return;
 
@@ -844,6 +968,7 @@
     }
 
     collectCheck();
+    checkSpikeHit();
 
     if (player.y + player.h > WATER_Y) {
       spawnSplash(player.x + player.w / 2, WATER_Y);
@@ -879,29 +1004,28 @@
       const p = platforms[c.platformIndex];
       c.y = p.y - c.h;
 
-      if (c.centered) {
-        c.x = p.x + (p.w - c.w) / 2;
-      } else {
-        if (level === 2 || level === 4) {
-          c.shootCd--;
-          if (c.shootCd <= 0 && player.alive && !player.won) {
-            spawnBulletLeft(c);
-            c.shootCd = 130 + Math.floor(Math.random() * 170);
-          }
+      if (c.shooter && (level === 2 || level === 4 || level === 5)) {
+        c.shootCd--;
+        if (c.shootCd <= 0 && player.alive && !player.won) {
+          spawnBulletFromCat(c);
+          c.shootCd = (level === 5)
+            ? 55 + Math.floor(Math.random() * 60)
+            : 100 + Math.floor(Math.random() * 90);
         }
+      }
 
-        c.x += c.vx;
-        const leftEdge = p.x + 6;
-        const rightEdge = p.x + p.w - c.w - 6;
+      c.x += c.vx;
 
-        if (c.x < leftEdge) {
-          c.x = leftEdge;
-          c.vx *= -1;
-        }
-        if (c.x > rightEdge) {
-          c.x = rightEdge;
-          c.vx *= -1;
-        }
+      const leftEdge = p.x + 6;
+      const rightEdge = p.x + p.w - c.w - 6;
+
+      if (c.x < leftEdge) {
+        c.x = leftEdge;
+        c.vx *= -1;
+      }
+      if (c.x > rightEdge) {
+        c.x = rightEdge;
+        c.vx *= -1;
       }
 
       if (!player.alive || player.won || player.invuln > 0) continue;
@@ -964,6 +1088,7 @@
     gameFinished = true;
     paused = false;
     setStatus("Koniec gry - ukonczyles wszystkie 5 rund!");
+
     ensureAudio();
     if (audioCtx && audioCtx.state !== "suspended") {
       beep({ freq: 784, dur: 0.12, type: "triangle", gain: 0.07 });
@@ -978,6 +1103,7 @@
       drawWater();
       return;
     }
+
     if (level === 4 || level === 5) {
       drawBieszczadyBackground();
       drawWater();
@@ -1206,6 +1332,36 @@
     }
   }
 
+  function drawSpikes() {
+    if (level !== 5) return;
+
+    for (const s of spikes) {
+      const x = s.x - camera.x;
+      const y = s.y - camera.y;
+
+      ctx.fillStyle = "#4b5563";
+      ctx.fillRect(x, y + s.h - 4, s.w, 4);
+
+      const spikeW = s.w / s.count;
+      for (let i = 0; i < s.count; i++) {
+        const sx = x + i * spikeW;
+        ctx.beginPath();
+        ctx.moveTo(sx, y + s.h);
+        ctx.lineTo(sx + spikeW * 0.5, y);
+        ctx.lineTo(sx + spikeW, y + s.h);
+        ctx.closePath();
+
+        const g = ctx.createLinearGradient(0, y, 0, y + s.h);
+        g.addColorStop(0, "#e5e7eb");
+        g.addColorStop(1, "#6b7280");
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.strokeStyle = "rgba(17,24,39,0.35)";
+        ctx.stroke();
+      }
+    }
+  }
+
   function drawChihuahua(px, py, face) {
     const x = px - camera.x;
     const y = py - camera.y;
@@ -1235,6 +1391,7 @@
     ctx.beginPath();
     ctx.ellipse(ear1X, y + 4, 6, 12, face > 0 ? -0.35 : 0.35, 0, Math.PI * 2);
     ctx.fill();
+
     ctx.beginPath();
     ctx.ellipse(ear2X, y + 2, 6, 12, face > 0 ? 0.25 : -0.25, 0, Math.PI * 2);
     ctx.fill();
@@ -1322,6 +1479,11 @@
     ctx.moveTo(x + 34, y + 18);
     ctx.quadraticCurveTo(x + 44, y + 14, x + 36, y + 8);
     ctx.stroke();
+
+    if (c.shooter && (level === 2 || level === 4 || level === 5)) {
+      ctx.fillStyle = "#111827";
+      ctx.fillRect(x - 4, y + 13, 8, 3);
+    }
   }
 
   function drawHut() {
@@ -1460,16 +1622,16 @@
 
   function drawEndScreen() {
     ctx.save();
-    ctx.fillStyle = "rgba(11,18,32,0.68)";
+    ctx.fillStyle = "rgba(11,18,32,0.78)";
     ctx.fillRect(0, 0, W, H);
 
-    const boxW = 760;
-    const boxH = 430;
+    const boxW = 820;
+    const boxH = 470;
     const boxX = (W - boxW) / 2;
     const boxY = (H - boxH) / 2;
 
     roundRect(boxX, boxY, boxW, boxH, 20);
-    ctx.fillStyle = "rgba(255,255,255,0.96)";
+    ctx.fillStyle = "rgba(255,255,255,0.97)";
     ctx.fill();
 
     ctx.fillStyle = "#111827";
@@ -1480,12 +1642,12 @@
     ctx.fillText(`Lacznie zebrane oscypki: ${player.totalScore}`, boxX + 28, boxY + 68);
     ctx.fillText("Nacisnij R albo kliknij Restart gry, aby zagrac ponownie.", boxX + 28, boxY + 96);
 
-    const imgX = boxX + 28;
-    const imgY = boxY + 120;
-    const imgW = boxW - 56;
-    const imgH = boxH - 148;
+    const imgX = boxX + 24;
+    const imgY = boxY + 118;
+    const imgW = boxW - 48;
+    const imgH = boxH - 142;
 
-    if (endingImg.complete && endingImg.naturalWidth > 0) {
+    if (endingImgReady) {
       const ratio = Math.min(imgW / endingImg.naturalWidth, imgH / endingImg.naturalHeight);
       const dw = endingImg.naturalWidth * ratio;
       const dh = endingImg.naturalHeight * ratio;
@@ -1509,11 +1671,13 @@
 
     if (!gameOver) {
       updatePlatforms(dt);
+
       timeLeft -= dt;
       if (timeLeft <= 0) {
         timeLeft = 0;
         onTimeOut();
       }
+
       updatePlayer();
       updateCats();
       updateBullets();
@@ -1547,6 +1711,7 @@
     drawBackground();
 
     for (const p of platforms) drawPlatform(p);
+    drawSpikes();
     drawCollectibles();
     drawHut();
     drawSmoke();
@@ -1587,6 +1752,7 @@
     const now = t || performance.now();
     const dt = lastT ? (now - lastT) / 1000 : 0;
     lastT = now;
+
     update(dt);
     draw();
     requestAnimationFrame(loop);
